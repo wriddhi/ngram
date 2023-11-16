@@ -13,12 +13,12 @@ type Tokens = {
 
 const WordCloudOptions = ["Unigrams", "Bigrams", "Trigrams"] as const;
 
-type TWordCloudOptions = typeof WordCloudOptions[number];
+type TWordCloudOptions = (typeof WordCloudOptions)[number];
 
 type WordCloudWord = {
-  text: string,
-  value: number
-}
+  text: string;
+  value: number;
+};
 
 type WordCloudWords = Record<TWordCloudOptions, WordCloudWord[]>;
 
@@ -35,30 +35,47 @@ const options = {
   rotationAngles: [0, 0],
   scale: "sqrt",
   spiral: "archimedean",
-  transitionDuration: 1000
+  transitionDuration: 1000,
 };
-
 
 // function getFrequency(data: Tokens[], key: TWordCloudOptions) : WordCloudWord[] {
 //   const result = data.map((item) => item[key]).join(", ").split(", ");
 // }
 
+const tokenify = (row: string): Tokens => {
+  function unique(strings: string[]): string[] {
+    return strings.filter(
+      (value, index, self) => self.indexOf(value) === index
+    );
+  }
 
-const tokenify = (row: string) => {
-  console.log("Row => ", row);
+  const words = row.split(" ").filter((word) => word.length > 2);
 
-  const words = row.split(" ").filter((word) => (word.length > 2));
+  const uni = unique(
+    Array.from(
+      nGram(1)(words).map((item) => JSON.parse(JSON.stringify(item)).join(" "))
+    )
+  ).join(", ");
 
-  const uni = nGram(1)(words);
+  const bi = unique(
+    Array.from(
+      nGram(2)(words).map((item) => JSON.parse(JSON.stringify(item)))
+    ).map((item) => JSON.parse(JSON.stringify(item)).join(" "))
+  ).join(", ");
 
-  console.log("Unigrams => ", uni);
+  const tri = unique(
+    Array.from(
+      nGram(3)(words).map((item) => JSON.parse(JSON.stringify(item)))
+    ).map((item) => JSON.parse(JSON.stringify(item)).join(" "))
+  ).join(", ");
 
-  // return {
-  //   Unigrams: nGram(1)(words).map((item) => item.join(" ")).join(", "),
+  const result: Tokens = {
+    Unigrams: uni,
+    Bigrams: bi,
+    Trigrams: tri,
+  };
 
-  //   Bigrams: nGram(2)(text).join(", "),
-  //   Trigrams: nGram(3)(text).join(", "),
-  // };
+  return result;
 };
 
 export default function Home() {
@@ -70,12 +87,12 @@ export default function Home() {
   const [blackListedWords, setBlackListedWords] = useState<string[]>([]);
   const [exclude, setExclude] = useState<string>("");
 
-  const [tokens, setTokens] = useState<Tokens[]>([]); 
+  const [tokens, setTokens] = useState<Tokens[]>([]);
 
   const wordCloudWords: WordCloudWords = {
     Unigrams: [],
     Bigrams: [],
-    Trigrams: []
+    Trigrams: [],
   };
 
   const sanitizedTokens = tokens.map((token) => {
@@ -96,34 +113,20 @@ export default function Home() {
   const handleData = (data: any, fileInfo: any) => {
     if (data.length === 0) return;
     setHeaders(data[0]);
-    setData(data.slice(1));
+    setData(data.slice(1).filter((row: any) => row));
     setFileName(fileInfo.name);
   };
 
-  const extract = async () => {
+  const extract = () => {
     const columnData = data.map((row) => row[headers.indexOf(activeHeader)]);
 
-    columnData.map((row) => {
-      tokenify(row);
-    })
+    console.log("Column Data => ", columnData);
 
-    console.log(columnData);
+    const rowTokens = columnData.map((row) => {
+      return tokenify(row);
+    });
 
-    // const res = await fetch("/api/extract", {
-    //   method: "POST",
-    //   body: JSON.stringify({
-    //     data: columnData,
-    //   }),
-    // });
-
-    // const response = (await res.json()) as Tokens[];
-
-    // const response: Tokens = {
-    //   Unigrams: nGram(1)(columnData.join(", ")).join(", "),
-    // }
-
-    // setTokens(response);
-
+    setTokens(rowTokens);
   };
 
   const blacklist = () => {
@@ -222,7 +225,11 @@ export default function Home() {
           </button>
         )}
         {downloadable && (
-          <form onSubmit={(e) => {e.preventDefault()}}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+            }}
+          >
             <input
               type="text"
               placeholder="Exclude words"
@@ -273,7 +280,7 @@ export default function Home() {
           </ul>
         </section>
       )}
-      {/* {downloadable && (
+      {downloadable && (
         <table className="outline outline-1 w-full">
           <thead>
             <tr>
@@ -292,7 +299,7 @@ export default function Home() {
             ))}
           </tbody>
         </table>
-      )} */}
+      )}
     </main>
   );
 }
