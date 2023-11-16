@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
+
 import CSVReader from "react-csv-reader";
 import csvDownload from "json-to-csv-export";
+
 import { nGram } from "n-gram";
+
+// WordCloud imports
+import { TagCloud } from "react-tagcloud";
 
 type Tokens = {
   Unigrams: string;
@@ -11,36 +16,66 @@ type Tokens = {
   Trigrams: string;
 };
 
+type WordData = {
+  value: string;
+  count: number;
+};
+
 const WordCloudOptions = ["Unigrams", "Bigrams", "Trigrams"] as const;
+type Result = Record<(typeof WordCloudOptions)[number], WordData[]>;
 
-type TWordCloudOptions = (typeof WordCloudOptions)[number];
+function collectDistinctWords(tokensArray: Tokens[]): Result {
+  const result: Result = {
+    Unigrams: [],
+    Bigrams: [],
+    Trigrams: [],
+  };
 
-type WordCloudWord = {
-  text: string;
-  value: number;
-};
+  const uniqueUnigrams = new Map<string, number>();
+  const uniqueBigrams = new Map<string, number>();
+  const uniqueTrigrams = new Map<string, number>();
 
-type WordCloudWords = Record<TWordCloudOptions, WordCloudWord[]>;
+  tokensArray.forEach((tokens) => {
+    tokens.Unigrams.split(", ").forEach((word) => {
+      if (uniqueUnigrams.has(word)) {
+        uniqueUnigrams.set(word, uniqueUnigrams.get(word)! + 1);
+      } else {
+        uniqueUnigrams.set(word, 1);
+      }
+    });
 
-const options = {
-  colors: ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"],
-  enableTooltip: true,
-  deterministic: false,
-  fontFamily: "impact",
-  fontSizes: [5, 60],
-  fontStyle: "normal",
-  fontWeight: "normal",
-  padding: 1,
-  rotations: 3,
-  rotationAngles: [0, 0],
-  scale: "sqrt",
-  spiral: "archimedean",
-  transitionDuration: 1000,
-};
+    tokens.Bigrams.split(", ").forEach((word) => {
+      if (uniqueBigrams.has(word)) {
+        uniqueBigrams.set(word, uniqueBigrams.get(word)! + 1);
+      } else {
+        uniqueBigrams.set(word, 1);
+      }
+    });
 
-// function getFrequency(data: Tokens[], key: TWordCloudOptions) : WordCloudWord[] {
-//   const result = data.map((item) => item[key]).join(", ").split(", ");
-// }
+    tokens.Trigrams.split(", ").forEach((word) => {
+      if (uniqueTrigrams.has(word.toLocaleLowerCase().trim())) {
+        uniqueTrigrams.set(word.toLocaleLowerCase().trim(), uniqueTrigrams.get(word)! + 1);
+      } else {
+        uniqueTrigrams.set(word.toLocaleLowerCase().trim(), 1);
+      }
+    });
+  });
+
+  uniqueUnigrams.forEach((count, word) => {
+    result.Unigrams.push({ value: word, count });
+  });
+
+  uniqueBigrams.forEach((count, word) => {
+    result.Bigrams.push({ value: word, count });
+  });
+
+  uniqueTrigrams.forEach((count, word) => {
+    result.Trigrams.push({ value: word, count });
+  });
+
+
+  return result;
+}
 
 const tokenify = (row: string): Tokens => {
   function unique(strings: string[]): string[] {
@@ -49,11 +84,12 @@ const tokenify = (row: string): Tokens => {
     );
   }
 
-  if(!row) return {
-    Unigrams: "",
-    Bigrams: "",
-    Trigrams: "",
-  }
+  if (!row)
+    return {
+      Unigrams: "",
+      Bigrams: "",
+      Trigrams: "",
+    };
 
   const words = row.split(" ").filter((word) => word.length > 2);
 
@@ -95,11 +131,8 @@ export default function Home() {
 
   const [tokens, setTokens] = useState<Tokens[]>([]);
 
-  const wordCloudWords: WordCloudWords = {
-    Unigrams: [],
-    Bigrams: [],
-    Trigrams: [],
-  };
+  const [wordCloudView, setWordCloudView] =
+    useState<(typeof WordCloudOptions)[number]>("Unigrams");
 
   const sanitizedTokens = tokens.map((token) => {
     const filteredUnigrams = token.Unigrams.split(", ").filter(
@@ -116,6 +149,17 @@ export default function Home() {
   const fileLoaded = data.length > 0;
   const downloadable = tokens.length > 0;
 
+  const options = {
+    title: "Word cloud",
+    resizable: true,
+    color: {
+      pairing: {
+        option: 3,
+      },
+    },
+    height: "400px",
+  };
+
   const handleData = (data: any, fileInfo: any) => {
     if (data.length === 0) return;
     setHeaders(data[0]);
@@ -125,8 +169,6 @@ export default function Home() {
 
   const extract = () => {
     const columnData = data.map((row) => row[headers.indexOf(activeHeader)]);
-
-    console.log("Column Data => ", columnData);
 
     const rowTokens = columnData.map((row) => {
       return tokenify(row);
@@ -166,6 +208,10 @@ export default function Home() {
       headers: [...headers, "Unigrams", "Bigrams", "Trigrams"],
     });
   };
+
+  if (sanitizedTokens.length > 0) {
+    console.log(collectDistinctWords(sanitizedTokens));
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between gap-4 p-16">
@@ -261,6 +307,24 @@ export default function Home() {
             Download CSV
           </button>
         )}
+        {downloadable && (
+          <select
+            id="cloud"
+            value={wordCloudView}
+            onChange={(e) =>
+              setWordCloudView(
+                e.target.value as (typeof WordCloudOptions)[number]
+              )
+            }
+            className="outline outline-1 p-2"
+          >
+            {WordCloudOptions.map((option, index) => (
+              <option key={index} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        )}
       </section>
       {blackListedWords.length > 0 && (
         <section className="grid grid-cols-[1fr_9fr] w-full">
@@ -286,7 +350,7 @@ export default function Home() {
           </ul>
         </section>
       )}
-      {downloadable && (
+      {/* {downloadable && (
         <table className="outline outline-1 w-full">
           <thead>
             <tr>
@@ -305,6 +369,14 @@ export default function Home() {
             ))}
           </tbody>
         </table>
+      )} */}
+      {downloadable && (
+        <TagCloud
+          minSize={12}
+          maxSize={60}
+          colorOptions={options.color}
+          tags={collectDistinctWords(sanitizedTokens)[wordCloudView]}
+        />
       )}
     </main>
   );
