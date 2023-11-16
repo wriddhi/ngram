@@ -49,6 +49,12 @@ const tokenify = (row: string): Tokens => {
     );
   }
 
+  if(!row) return {
+    Unigrams: "",
+    Bigrams: "",
+    Trigrams: "",
+  }
+
   const words = row.split(" ").filter((word) => word.length > 2);
 
   const uni = unique(
