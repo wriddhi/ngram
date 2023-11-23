@@ -223,7 +223,7 @@ export default function Home() {
   
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between gap-4">
+    <main className="flex min-h-screen flex-col items-center justify-between gap-4 p-16">
       {!fileLoaded && (
         <CSVReader
           cssClass="outline outline-1 p-2 cursor-pointer"
@@ -234,7 +234,8 @@ export default function Home() {
         />
       )}
       {data.length > 0 && !downloadable && (
-          <div className="data-table-container">
+        <div className="data-table-container">
+
           <table className="outline outline-1 w-full mycsv">
             {headers.length > 0 && (
               <thead>
@@ -263,8 +264,7 @@ export default function Home() {
           </table>
         </div>
       )}
-      <section className="Slection">
-        <div className="Dropdown">
+      <section className="flex w-full justify-center items-center gap-10">
         {data.length !== 0 && (
           <select
             className="outline outline-1 p-2"
@@ -287,12 +287,8 @@ export default function Home() {
           >
             Extract by {activeHeader}{" "}
           </button>
-          
         )}
-        </div>
-        <div className="Dropdown">
         {downloadable && (
-          
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -309,7 +305,7 @@ export default function Home() {
             />
             <button
               onClick={blacklist}
-              className=""
+              className="p-3 bg-black text-white font-bold"
             >
               Exclude
             </button>
@@ -318,7 +314,7 @@ export default function Home() {
         {downloadable && (
           <button
             onClick={download}
-            className=""
+            className="outline outline-1 p-2 bg-green-500 text-white rounded-lg font-bold"
           >
             Download CSV
           </button>
@@ -332,7 +328,7 @@ export default function Home() {
                 e.target.value as (typeof WordCloudOptions)[number]
               )
             }
-            className=""
+            className="outline outline-1 p-2"
           >
             {WordCloudOptions.map((option, index) => (
               <option key={index} value={option}>
@@ -340,17 +336,15 @@ export default function Home() {
               </option>
             ))}
           </select>
-          
         )}
-        </div>
       </section>
       {blackListedWords.length > 0 && (
-        <section className="excluded">
+        <section className="grid grid-cols-[1fr_9fr] w-full">
           <span className="font-bold">Excluded words : </span>
           <ul className="flex gap-4 w-full flex-wrap">
             {blackListedWords.map((word, index) => (
               <li
-                className="bg-black/10 px-3 py-1 outline-dashed outline-1 flex gap-3 items-center extag"
+                className="bg-black/10 px-3 py-1 outline-dashed outline-1 flex gap-3 items-center"
                 key={index}
               >
                 {word}{" "}
@@ -399,11 +393,6 @@ export default function Home() {
              /> */
 
         <ReactWordcloud
-          options= {{rotations: 2,
-            rotationAngles: [-90, 0],
-          fontSizes:[30,100],
-          fontWeight:'700',
-        }}
           words={collectDistinctWords(sanitizedTokens)[wordCloudView]}
         />
 
@@ -412,3 +401,8 @@ export default function Home() {
   );
 }
 
+
+const cloudoptions = {
+  fontSizes: [20,40],
+  rotationAngles: [-90, 0],
+};

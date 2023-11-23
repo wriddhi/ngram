@@ -10,15 +10,14 @@ input::file-selector-button {
   padding: 0.5em;
   border-radius: 3px;
 }
-*{margin: 0;
-padding: 0;}
+
 
 /* index.css */
 /* styles.css */
 
 .data-table-container {
   width: 80%;
-  height: 70vh;
+  height: 80vh;
   overflow-x: auto; /* Enable horizontal scrolling */
 }
 
@@ -45,48 +44,3 @@ td:nth-child(2) {
 }
 
 /* Add more nth-child rules for additional columns */
-.Slection{
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 900px;
-  
-}
-.Dropdown{
-  display: flex;
-  flex-direction: row;
-  padding: 10px;
-  justify-content: space-around;
-}
-
-select,button,form{
-  padding: 10px 30px;
-  margin: 10px;
-  font-size: medium;
-  background: transparent;
-  border: solid 2px #000;
-}
-
-.extag button{
-margin: 0px;
-padding: 0px;
-border: none;
-
-}
-
-.extag{
-  border: solid 1px #000;
-  border-radius: 10%;
-}
-
-.excluded{
-  display: flex;
-  flex-direction: column;
-justify-content: baseline;
-width: 100%;
-max-width: 900px;
-}
-
-main{
-  padding-top: 20px;
-}

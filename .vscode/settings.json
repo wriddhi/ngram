@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "undefined/subscriptions/eee0b196-f78d-44a1-9d50-87d4aa3c27bc/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/Txtanalysis",
+    "appService.deploySubpath": "."
+}
